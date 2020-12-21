@@ -124,7 +124,7 @@
 	<body>
 		<div id="overlay">
 			<button id="startButton">Play</button>
-			<input type="file" accept=".mp3" id=selector style="display: none;" onchange="if(this.files && this.files[0]){init(this)}">
+			<input type="file" accept=".mp3" id=selector style="display: none;">
 		</div>
 		<div id="container"></div>
 		<div id="info">
@@ -139,7 +139,7 @@
 
 			const startButton = document.getElementById( 'startButton' );
 			startButton.addEventListener( 'click', function(){document.getElementById('selector').click()});
-
+			{document.getElementById('selector').addEventListener('change', function(){if(this.files && this.files[0]){init(this)}})
 			function init(e) {
 
 				const fftSize = 128;
