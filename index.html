@@ -138,7 +138,7 @@
 			let scene, camera, renderer, analyser, uniforms;
 
 			const startButton = document.getElementById( 'startButton' );
-			startButton.addEventListener( 'click', init );
+			startButton.addEventListener( 'click', function(){document.getElementById('selector').click()});
 
 			function init(e) {
 
