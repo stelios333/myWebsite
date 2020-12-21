@@ -139,7 +139,7 @@
 
 			const startButton = document.getElementById( 'startButton' );
 			startButton.addEventListener( 'click', function(){document.getElementById('selector').click()});
-			{document.getElementById('selector').addEventListener('change', function(){if(this.files && this.files[0]){init(this)}})
+			document.getElementById('selector').addEventListener('change', function(){if(this.files && this.files[0]){init(this)}})
 			function init(e) {
 
 				const fftSize = 128;
