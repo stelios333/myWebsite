@@ -1,94 +1,73 @@
-
+<!DOCTYPE html>
 <html lang="en">
-	<head>
-		<title>three.js webaudio - visualizer</title>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-        <style>
-            body {
-            	margin: 0;
-            	background-color: #000;
-            	color: #fff;
-            	font-family: Monospace;
-            	font-size: 13px;
-            	line-height: 24px;
-            	overscroll-behavior: none;
-            }
-            
-            a {
-            	color: #ff0;
-            	text-decoration: none;
-            }
-            
-            a:hover {
-            	text-decoration: underline;
-            }
-            
-            button {
-            	cursor: pointer;
-            	text-transform: uppercase;
-            }
-            
-            #info {
-            	position: absolute;
-            	top: 0px;
-            	width: 100%;
-            	padding: 10px;
-            	box-sizing: border-box;
-            	text-align: center;
-            	-moz-user-select: none;
-            	-webkit-user-select: none;
-            	-ms-user-select: none;
-            	user-select: none;
-            	pointer-events: none;
-            	z-index: 1; /* TODO Solve this in HTML */
-            }
-            
-            a, button, input, select {
-            	pointer-events: auto;
-            }
-            
-            .dg.ac {
-            	-moz-user-select: none;
-            	-webkit-user-select: none;
-            	-ms-user-select: none;
-            	user-select: none;
-            	z-index: 2 !important; /* TODO Solve this in HTML */
-            }
-            
-            #overlay {
-            	position: absolute;
-            	z-index: 2;
-            	top: 0;
-            	left: 0;
-            	width: 100%;
-            	height: 100%;
-            	display: flex;
-            	align-items: center;
-            	justify-content: center;
-            	background: rgba(0,0,0,0.7);
-            }
-            
-            	#overlay button {
-            		background: #ffffff;
-            		border: 0;
-            		color: #000000;
-            		padding: 16px 20px;
-            		text-transform: uppercase;
-            		cursor: pointer;
-            	}
-            
-            #notSupported {
-            	width: 50%;
-            	margin: auto;
-            	background-color: #f00;
-            	margin-top: 20px;
-            	padding: 10px;
-            }
-        </style>
-		<script id="vertexShader" type="x-shader/x-vertex">
 
-			varying vec2 vUv;
+<head>
+    <title>Audio player with three.js</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.3/css/bootstrap.min.css">
+    <style>
+        body {
+            margin: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: Monospace;
+            font-size: 13px;
+            line-height: 24px;
+            overscroll-behavior: none;
+        }
+
+
+        button {
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        #info {
+            position: absolute;
+            top: 0px;
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            text-align: center;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            z-index: 1;
+			pointer-events: all;
+            /* TODO Solve this in HTML */
+        }
+
+        #overlay {
+            position: absolute;
+            z-index: 100;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+		.btn-secondary{
+			padding: 0.5625rem 1.125rem
+		}
+
+        #audio {
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            height: 20%;
+            top: 80%;
+        }
+    </style>
+    <script id="vertexShader" type="x-shader/x-vertex">
+
+        varying vec2 vUv;
 
 			void main() {
 
@@ -100,9 +79,9 @@
 
 		</script>
 
-		<script id="fragmentShader" type="x-shader/x-fragment">
+    <script id="fragmentShader" type="x-shader/x-fragment">
 
-			uniform sampler2D tAudioData;
+        uniform sampler2D tAudioData;
 			varying vec2 vUv;
 
 			void main() {
@@ -120,120 +99,149 @@
 
 		</script>
 
-	</head>
-	<body>
-		<div id="overlay">
-			<button id="startButton">Play</button>
-			<input type="file" accept=".mp3" id=selector style="display: none;">
-		</div>
-		<div id="container"></div>
-		<div id="info">
-			<a href="https://threejs.org" target="_blank" rel="noopener noreferrer">three.js</a> webaudio - visualizer
-		</div>
+</head>
 
-		<script type="module">
+<body>
+    <div id="overlay">
+        <button id="startButton" class="btn btn-secondary">Play</button>
+        <input type="file" accept=".mp3" id=selector style="display: none;">
+    </div>
+    <div id="audio">
+        <span id="audioElement"></span>
+        <button id="stopButton" style="display: none; height:50%; margin-left: 3%" class="btn btn-secondary">Stop</button>
+    </div>
+    <div id="container"></div>
+    <div id="info">
+        <a href="https://threejs.org" target="_blank" class="text-warning">three.js</a> webaudio - visualizer
+    </div>
 
-			import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r123/three.module.js';
+    <script type="module">
+        import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r123/three.module.js';
 
-			let scene, camera, renderer, analyser, uniforms;
+        let scene, camera, renderer, analyser, uniforms;
 
-			const startButton = document.getElementById( 'startButton' );
-			startButton.addEventListener( 'click', function(){document.getElementById('selector').click()});
-			document.getElementById('selector').addEventListener('change', function(){if(this.files && this.files[0]){init(this)}})
-			function init(e) {
+        const startButton = document.getElementById('startButton');
+        startButton.addEventListener('click', function() {
+			document.getElementById('selector').value = null
+            document.getElementById('selector').click()
+        });
+        document.getElementById('selector').addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                init(this)
+            }
+        })
 
-				const fftSize = 128;
+        function init(e) {
 
-				//
+            const fftSize = 128;
 
-
-				//
-				document.getElementById('overlay').style.display = "none"
-				const container = document.getElementById( 'container' );
-				container.innerHTML = ''
-				renderer = new THREE.WebGLRenderer( { antialias: true } );
-				renderer.setSize( window.innerWidth, window.innerHeight );
-				renderer.setClearColor( 0x000000 );
-				renderer.setPixelRatio( window.devicePixelRatio );
-				container.appendChild( renderer.domElement );
-
-				scene = new THREE.Scene();
-
-				camera = new THREE.Camera();
-
-				//
-
-				const listener = new THREE.AudioListener();
-
-				const audio = new THREE.Audio( listener );
-				const file = URL.createObjectURL(e.files[0]);
+            //
 
 
-				const mediaElement = new Audio( file );
-				mediaElement.play();
+            //
+            document.getElementById('overlay').style.display = "none"
+            const container = document.getElementById('container');
+            container.innerHTML = ''
+            renderer = new THREE.WebGLRenderer({
+                antialias: true
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000000);
+            renderer.setPixelRatio(window.devicePixelRatio);
+			container.appendChild(renderer.domElement);
 
-				audio.setMediaElementSource( mediaElement );
+            scene = new THREE.Scene();
 
-				
+            camera = new THREE.Camera();
 
-				analyser = new THREE.AudioAnalyser( audio, fftSize );
+            //
 
-				//
+            const listener = new THREE.AudioListener();
 
-				const format = ( renderer.capabilities.isWebGL2 ) ? THREE.RedFormat : THREE.LuminanceFormat;
+            const audio = new THREE.Audio(listener);
+            const file = URL.createObjectURL(e.files[0]);
 
-				uniforms = {
 
-					tAudioData: { value: new THREE.DataTexture( analyser.data, fftSize / 2, 1, format ) }
+            const mediaElement = new Audio(file);
+            mediaElement.play();
+            mediaElement.controls = "true"
+            document.getElementById('audioElement').appendChild(mediaElement)
+            var onend = function() {
+                document.getElementById('overlay').style.display = "flex";
+                mediaElement.remove()
+                document.getElementById('stopButton').style.display = 'none'
+            }
+            var stop = function() {
+				mediaElement.currentTime = mediaElement.duration
+            }
 
-				};
+            document.getElementById('stopButton').addEventListener('click', stop)
+            mediaElement.addEventListener('ended', onend)
+            document.getElementById('stopButton').style.display = 'inline-block'
+            audio.setMediaElementSource(mediaElement);
 
-				const material = new THREE.ShaderMaterial( {
 
-					uniforms: uniforms,
-					vertexShader: document.getElementById( 'vertexShader' ).textContent,
-					fragmentShader: document.getElementById( 'fragmentShader' ).textContent
 
-				} );
+            analyser = new THREE.AudioAnalyser(audio, fftSize);
 
-				const geometry = new THREE.PlaneBufferGeometry( 1, 1 );
+            //
 
-				const mesh = new THREE.Mesh( geometry, material );
-				scene.add( mesh );
+            const format = (renderer.capabilities.isWebGL2) ? THREE.RedFormat : THREE.LuminanceFormat;
 
-				//
+            uniforms = {
 
-				window.addEventListener( 'resize', onResize, false );
+                tAudioData: {
+                    value: new THREE.DataTexture(analyser.data, fftSize / 2, 1, format)
+                }
 
-				animate();
+            };
 
-			}
+            const material = new THREE.ShaderMaterial({
 
-			function onResize() {
+                uniforms: uniforms,
+                vertexShader: document.getElementById('vertexShader').textContent,
+                fragmentShader: document.getElementById('fragmentShader').textContent
 
-				renderer.setSize( window.innerWidth, window.innerHeight );
+            });
 
-			}
+            const geometry = new THREE.PlaneBufferGeometry(1, 1);
 
-			function animate() {
+            const mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh);
 
-				requestAnimationFrame( animate );
+            //
 
-				render();
+            window.addEventListener('resize', onResize, false);
 
-			}
+            animate();
 
-			function render() {
+        }
 
-				analyser.getFrequencyData();
+        function onResize() {
 
-				uniforms.tAudioData.value.needsUpdate = true;
+            renderer.setSize(window.innerWidth, window.innerHeight);
 
-				renderer.render( scene, camera );
+        }
 
-			}
+        function animate() {
 
-		</script>
+            requestAnimationFrame(animate);
 
-	</body>
+            render();
+
+        }
+
+        function render() {
+
+            analyser.getFrequencyData();
+
+            uniforms.tAudioData.value.needsUpdate = true;
+
+            renderer.render(scene, camera);
+
+        }
+    </script>
+
+</body>
+
 </html>
